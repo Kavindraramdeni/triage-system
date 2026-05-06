@@ -37,7 +37,7 @@ export default async function DashboardPage() {
   ]);
 
   // Serialize dates to strings — Next.js server components can't pass Date objects to client components
-  const queue = rawQueue.map((v) => ({
+  const queue = rawQueue.map((v: (typeof rawQueue)[number]) => ({
     ...v,
     arrivedAt: v.arrivedAt.toISOString(),
     seenAt: v.seenAt?.toISOString() ?? null,
@@ -46,11 +46,11 @@ export default async function DashboardPage() {
     updatedAt: v.updatedAt.toISOString(),
   }));
 
-  const waiting = stats.find((s) => s.status === "WAITING")?._count ?? 0;
-  const inTriage = stats.find((s) => s.status === "IN_TRIAGE")?._count ?? 0;
-  const inTreatment = stats.find((s) => s.status === "IN_TREATMENT")?._count ?? 0;
+  const waiting = stats.find((s: (typeof stats)[number]) => s.status === "WAITING")?._count ?? 0;
+  const inTriage = stats.find((s: (typeof stats)[number]) => s.status === "IN_TRIAGE")?._count ?? 0;
+  const inTreatment = stats.find((s: (typeof stats)[number]) => s.status === "IN_TREATMENT")?._count ?? 0;
   const critical = queue.filter(
-    (v) => v.esiLevel === "ESI_1" || v.esiLevel === "ESI_2"
+    (v: (typeof queue)[number]) => v.esiLevel === "ESI_1" || v.esiLevel === "ESI_2"
   ).length;
 
   return (

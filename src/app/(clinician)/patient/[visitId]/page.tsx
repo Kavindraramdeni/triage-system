@@ -115,7 +115,7 @@ export default async function PatientDetailPage({ params }: { params: Promise<{ 
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
               <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Override history</h2>
               <div className="space-y-3">
-                {visit.overrides.map(o => (
+                {visit.overrides.map((o: (typeof visit.overrides)[number]) => (
                   <div key={o.id} className="text-sm border-l-2 border-amber-400 pl-3">
                     <p className="text-gray-700">
                       <span className="font-medium">{o.clinician.name}</span> changed{" "}

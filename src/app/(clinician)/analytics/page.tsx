@@ -32,7 +32,7 @@ export default async function AnalyticsPage() {
   ]);
 
   const avgWaitMins = avgWait.length
-    ? Math.round(avgWait.reduce((sum, v) => sum + (new Date(v.seenAt!).getTime() - new Date(v.arrivedAt).getTime()), 0) / avgWait.length / 60000)
+    ? Math.round(avgWait.reduce((sum: number, v: { arrivedAt: Date; seenAt: Date | null }) => sum + (new Date(v.seenAt!).getTime() - new Date(v.arrivedAt).getTime()), 0) / avgWait.length / 60000)
     : null;
 
   const totalAssessments = await prisma.triageAssessment.count();
