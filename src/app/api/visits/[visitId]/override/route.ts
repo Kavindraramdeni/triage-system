@@ -11,7 +11,7 @@ const overrideSchema = z.object({
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { visitId: string } }
+  { params }: { params: Promise<{ visitId: string }> }
 ) {
   const auth = await requireClinician(req);
   if (!auth.ok) return auth.error;
@@ -27,9 +27,10 @@ export async function POST(
 
   // JWT sub contains the clinician's DB id
   const clinicianId = auth.clinician.sub as string;
+  const { visitId } = await params;
 
   const override = await clinicianService.overrideEsi({
-    visitId: params.visitId,
+    visitId: visitId,
     clinicianId,
     newEsi: parsed.data.newEsi,
     reason: parsed.data.reason,
@@ -39,7 +40,7 @@ export async function POST(
     clinicianId,
     action: "ESI_OVERRIDE",
     entityType: "Visit",
-    entityId: params.visitId,
+    entityId: visitId,
     afterState: override,
     req,
   });

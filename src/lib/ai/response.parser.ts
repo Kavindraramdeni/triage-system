@@ -34,12 +34,34 @@ export const aiResponseSchema = z.object({
 
 export type AiTriageResponse = z.infer<typeof aiResponseSchema>;
 
+function extractJsonObject(raw: string): string {
+  const cleaned = raw
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim();
+
+  if (cleaned.startsWith("{") && cleaned.endsWith("}")) {
+    return cleaned;
+  }
+
+  const firstBrace = cleaned.indexOf("{");
+  const lastBrace = cleaned.lastIndexOf("}");
+
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    return cleaned.slice(firstBrace, lastBrace + 1);
+  }
+
+  throw new Error(`AI returned non-JSON response: ${raw.slice(0, 200)}`);
+}
+
 export function parseAiResponse(raw: string): AiTriageResponse {
   let parsed: unknown;
+
   try {
-    parsed = JSON.parse(raw);
+    parsed = JSON.parse(extractJsonObject(raw));
   } catch {
-    throw new Error(`AI returned non-JSON response: ${raw.slice(0, 200)}`);
+    throw new Error(`AI returned invalid JSON response: ${raw.slice(0, 200)}`);
   }
 
   const result = aiResponseSchema.safeParse(parsed);

@@ -22,9 +22,10 @@ const WAIT_ESTIMATES: Record<string, string> = {
   ESI_5: "~2 hours",
 };
 
-export default async function StatusPage({ params }: { params: { token: string } }) {
+export default async function StatusPage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
   const visit = await prisma.visit.findUnique({
-    where: { accessToken: params.token },
+    where: { accessToken: token },
     select: { status: true, esiLevel: true, queuePosition: true, arrivedAt: true },
   });
 

@@ -17,8 +17,7 @@ export function getTriageModel(): GenerativeModel {
     _model = getClient().getGenerativeModel({
       model: "gemini-1.5-pro",
       generationConfig: {
-        responseMimeType: "application/json", // Force JSON output
-        temperature: 0.1,                     // Low temperature for medical consistency
+        temperature: 0.1,
         maxOutputTokens: 1024,
       },
     });

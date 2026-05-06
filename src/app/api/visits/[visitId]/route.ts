@@ -11,12 +11,13 @@ const updateSchema = z.object({
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { visitId: string } }
+  { params }: { params: Promise<{ visitId: string }> }
 ) {
   const auth = await requireClinician(req);
   if (!auth.ok) return auth.error;
 
-  const visit = await clinicianService.getVisitDetail(params.visitId);
+  const { visitId } = await params;
+  const visit = await clinicianService.getVisitDetail(visitId);
   if (!visit) return NextResponse.json({ error: "Visit not found" }, { status: 404 });
 
   return NextResponse.json({ visit });
@@ -24,7 +25,7 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { visitId: string } }
+  { params }: { params: Promise<{ visitId: string }> }
 ) {
   const auth = await requireClinician(req);
   if (!auth.ok) return auth.error;
@@ -35,14 +36,15 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid update payload" }, { status: 422 });
   }
 
-  const before = await clinicianService.getVisitDetail(params.visitId);
-  const updated = await clinicianService.updateVisit(params.visitId, parsed.data);
+  const { visitId } = await params;
+  const before = await clinicianService.getVisitDetail(visitId);
+  const updated = await clinicianService.updateVisit(visitId, parsed.data);
 
   await auditService.log({
     clinicianId: auth.clinician.sub as string,
     action: "STATUS_CHANGED",
     entityType: "Visit",
-    entityId: params.visitId,
+    entityId: visitId,
     beforeState: before,
     afterState: updated,
     req,
