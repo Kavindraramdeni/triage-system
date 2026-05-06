@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EsiLevel {
+  ESI_1
+  ESI_2
+  ESI_3
+  ESI_4
+  ESI_5
+}
+
+enum VisitStatus {
+  WAITING
+  IN_TRIAGE
+  IN_TREATMENT
+  DISCHARGED
+  TRANSFERRED
+  LEFT_WITHOUT_BEING_SEEN
+}
+
+enum ClinicianRole {
+  TRIAGE_NURSE
+  ATTENDING_PHYSICIAN
+  RESIDENT
+  ADMIN
+}
+
+model Patient {
+  id          String   @id @default(cuid())
+  mrn         String   @unique
+  firstName   String
+  lastName    String
+  dateOfBirth DateTime
+  phone       String
+  email       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  visits Visit[]
+}
+
+model Clinician {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         ClinicianRole
+  department   String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignedVisits Visit[]         @relation("AssignedVisits")
+  overrides     TriageOverride[]
+  auditLogs     AuditLog[]
+}
+
+model Visit {
+  id             String      @id @default(cuid())
+  patientId      String
+  chiefComplaint String
+  status         VisitStatus @default(WAITING)
+  esiLevel       EsiLevel?
+  queuePosition  Int?
+  accessToken    String      @unique @default(cuid())
+  assignedTo     String?
+  arrivedAt      DateTime    @default(now())
+  seenAt         DateTime?
+  dischargedAt   DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  patient          Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  clinician        Clinician?        @relation("AssignedVisits", fields: [assignedTo], references: [id])
+  triageAssessment TriageAssessment?
+  overrides        TriageOverride[]
+}
+
+model TriageAssessment {
+  id              String   @id @default(cuid())
+  visitId          String   @unique
+  symptoms         String[]
+  painScale        Int
+  symptomDuration  String
+  symptomOnset     String
+  systolicBp       Int?
+  diastolicBp      Int?
+  heartRate        Int?
+  temperature      Float?
+  spo2             Int?
+  respiratoryRate  Int?
+  aiEsiLevel       EsiLevel
+  aiUrgencyScore   Float
+  aiUrgencyFlags   String[]
+  aiSummary        String
+  aiDifferentials  Json
+  aiRecommendations Json
+  aiModel          String
+  aiLatencyMs      Int
+  aiFallback       Boolean @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+}
+
+model TriageOverride {
+  id          String   @id @default(cuid())
+  visitId      String
+  clinicianId  String
+  previousEsi  EsiLevel
+  newEsi       EsiLevel
+  reason       String
+  createdAt    DateTime @default(now())
+
+  visit      Visit      @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  clinician  Clinician  @relation(fields: [clinicianId], references: [id], onDelete: Restrict)
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  clinicianId String
+  action      String
+  entityType  String
+  entityId    String
+  beforeState Json?
+  afterState  Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  clinician Clinician @relation(fields: [clinicianId], references: [id], onDelete: Restrict)
+}

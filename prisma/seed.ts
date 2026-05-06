@@ -1,0 +1,24 @@
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
+
+const prisma = new PrismaClient();
+
+async function main() {
+  const hash = await bcrypt.hash("admin123", 12);
+  await prisma.clinician.upsert({
+    where: { email: "admin@hospital.com" },
+    update: {},
+    create: {
+      name: "Dr. Admin",
+      email: "admin@hospital.com",
+      passwordHash: hash,
+      role: "ATTENDING_PHYSICIAN",
+      department: "Emergency",
+      isActive: true,
+    },
+  });
+
+  console.log("Seed complete. Login: admin@hospital.com / admin123");
+}
+
+main().catch(console.error).finally(() => prisma.$disconnect());
