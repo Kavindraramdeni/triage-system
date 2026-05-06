@@ -9,9 +9,10 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-export default async function PatientDetailPage({ params }: { params: { visitId: string } }) {
+export default async function PatientDetailPage({ params }: { params: Promise<{ visitId: string }> }) {
+  const { visitId } = await params;
   const visit = await prisma.visit.findUnique({
-    where: { id: params.visitId },
+    where: { id: visitId },
     include: {
       patient: true,
       triageAssessment: true,
